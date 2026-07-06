@@ -22,7 +22,7 @@ public class ProductService : IProductService
         var response = _mapper.Map<List<ProductResponseDto>>(products);
         foreach (var productResponse in response)
         {
-            productResponse.Stock = await _productRepository.GetStockCountAsync(productResponse.Id);
+            productResponse.Stock = products.First(p => p.Id == productResponse.Id).UnitProducts.Count;
         }
         return response;
     }
