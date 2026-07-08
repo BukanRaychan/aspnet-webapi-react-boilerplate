@@ -35,7 +35,7 @@ public class ProductRepository : IProductRepository
 
     public async Task<bool> DeleteAsync(int id)
     {
-        var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
+        Product? product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
         if (product == null) return false;
 
         _context.Products.Remove(product);
@@ -45,12 +45,12 @@ public class ProductRepository : IProductRepository
 
     public async Task<(List<Product> Items, int TotalCount)> GetPagedAsync(PaginationQueryDto pagination)
     {
-        var query = _context.Products
+        IOrderedQueryable<Product> query = _context.Products
             .Include(p => p.UnitProducts)
             .OrderBy(p => p.Id);
 
-        var totalCount = await query.CountAsync();
-        var items = await query
+        int totalCount = await query.CountAsync();
+        List<Product> items = await query
             .Skip((pagination.PageNumber - 1) * pagination.PageSize)
             .Take(pagination.PageSize)
             .ToListAsync();

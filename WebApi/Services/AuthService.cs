@@ -21,10 +21,12 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponseDto?> RegisterAsync(RegisterDto dto)
     {
-        var existingUser = await _userManager.FindByEmailAsync(dto.Email);
-        if (existingUser != null) return null;
+        ApplicationUser? existingUser = await _userManager.FindByEmailAsync(dto.Email);
+        if (existingUser != null) {
+            return null;
+        }
 
-        var user = new ApplicationUser
+        ApplicationUser user = new()
         {
             FirstName = dto.FirstName,
             LastName = dto.LastName,
@@ -33,26 +35,32 @@ public class AuthService : IAuthService
             CreatedAt = DateTime.UtcNow
         };
 
-        var result = await _userManager.CreateAsync(user, dto.Password);
-        if (!result.Succeeded) return null;
+        IdentityResult result = await _userManager.CreateAsync(user, dto.Password);
+        if (!result.Succeeded) {
+            return null;
+        }
 
         return GenerateToken(user);
     }
 
     public async Task<AuthResponseDto?> LoginAsync(LoginDto dto)
     {
-        var user = await _userManager.FindByEmailAsync(dto.Email);
-        if (user == null) return null;
+        ApplicationUser? user = await _userManager.FindByEmailAsync(dto.Email);
+        if (user == null) {
+            return null;
+        }
 
-        var passwordValid = await _userManager.CheckPasswordAsync(user, dto.Password);
-        if (!passwordValid) return null;
+        bool passwordValid = await _userManager.CheckPasswordAsync(user, dto.Password);
+        if (!passwordValid) {
+            return null;
+        }
 
         return GenerateToken(user);
     }
 
     public async Task<bool> UpdateProfileAsync(string userId, UpdateProfileDto dto)
     {
-        var user = await _userManager.FindByIdAsync(userId);
+        ApplicationUser? user = await _userManager.FindByIdAsync(userId);
         if (user == null) return false;
 
         user.FirstName = dto.FirstName;
@@ -60,7 +68,7 @@ public class AuthService : IAuthService
 
         if (dto.CurrentPassword != null && dto.NewPassword != null)
         {
-            var passwordResult = await _userManager.ChangePasswordAsync(
+            IdentityResult passwordResult = await _userManager.ChangePasswordAsync(
                 user,
                 dto.CurrentPassword,
                 dto.NewPassword
@@ -68,29 +76,29 @@ public class AuthService : IAuthService
             if (!passwordResult.Succeeded) return false;
         }
 
-        var updateResult = await _userManager.UpdateAsync(user);
+        IdentityResult updateResult = await _userManager.UpdateAsync(user);
         return updateResult.Succeeded;
     }
 
     private AuthResponseDto GenerateToken(ApplicationUser user)
     {
-        var key = _configuration["Jwt:Key"]!;
-        var issuer = _configuration["Jwt:Issuer"]!;
-        var audience = _configuration["Jwt:Audience"]!;
-        var expiresAt = DateTime.UtcNow.AddHours(24);
+        string key = _configuration["Jwt:Key"]!;
+        string issuer = _configuration["Jwt:Issuer"]!;
+        string audience = _configuration["Jwt:Audience"]!;
+        DateTime expiresAt = DateTime.UtcNow.AddHours(24);
 
-        var claims = new[]
-        {
+        Claim[] claims =
+        [
             new Claim(ClaimTypes.NameIdentifier, user.Id),
             new Claim(ClaimTypes.Email, user.Email!),
             new Claim(ClaimTypes.GivenName, user.FirstName),
             new Claim(ClaimTypes.Surname, user.LastName),
-        };
+        ];
 
-        var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
-        var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
+        SymmetricSecurityKey signingKey = new(Encoding.UTF8.GetBytes(key));
+        SigningCredentials credentials = new(signingKey, SecurityAlgorithms.HmacSha256);
 
-        var token = new JwtSecurityToken(
+        JwtSecurityToken token = new(
             issuer: issuer,
             audience: audience,
             claims: claims,

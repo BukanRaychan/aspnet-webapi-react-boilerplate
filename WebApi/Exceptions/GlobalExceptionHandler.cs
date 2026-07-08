@@ -23,7 +23,7 @@ public class GlobalExceptionHandler : IExceptionHandler
         _logger.LogError(exception, "Unhandled exception: {Message}", exception.Message);
 
         // Determine status code based on exception type
-        var statusCode = exception switch
+        HttpStatusCode statusCode = exception switch
         {
             ArgumentException => HttpStatusCode.BadRequest,
             KeyNotFoundException => HttpStatusCode.NotFound,
@@ -32,7 +32,7 @@ public class GlobalExceptionHandler : IExceptionHandler
         };
 
         // Build clean error response
-        var response = ApiResponseDto<object>.ErrorResult(
+        ApiResponseDto<object> response = ApiResponseDto<object>.ErrorResult(
             error: exception.Message,
             message: GetMessageFromStatusCode(statusCode)
         );
@@ -40,7 +40,7 @@ public class GlobalExceptionHandler : IExceptionHandler
         httpContext.Response.StatusCode = (int)statusCode;
         httpContext.Response.ContentType = "application/json";
 
-        var json = JsonSerializer.Serialize(response, new JsonSerializerOptions
+        string json = JsonSerializer.Serialize(response, new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });

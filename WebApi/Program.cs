@@ -12,7 +12,7 @@ using WebApi.Models;
 using WebApi.Repositories;
 using WebApi.Services;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -70,8 +70,8 @@ builder.Services.AddScoped<ISeeder, UnitProductSeeder>();
 builder.Services.AddScoped<DataSeeder>();
 
 // Database — provider chosen by config (Sqlite for local dev, MySql/Postgres for production)
-var dbProvider = builder.Configuration["Database:Provider"] ?? "Sqlite";
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+string dbProvider = builder.Configuration["Database:Provider"] ?? "Sqlite";
+string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     switch (dbProvider.ToLowerInvariant())
@@ -107,7 +107,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(
 .AddDefaultTokenProviders();
 
 // JWT Authentication
-var jwtKey = builder.Configuration["Jwt:Key"]!;
+string jwtKey = builder.Configuration["Jwt:Key"]!;
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -127,7 +127,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+string[] corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -139,18 +139,18 @@ builder.Services.AddCors(options =>
     });
 });
 
-var app = builder.Build(); 
+WebApplication app = builder.Build();
 
 app.UseCors("AllowFrontend");
 
-using (var scope = app.Services.CreateScope())
+using (IServiceScope scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    AppDbContext context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     context.Database.Migrate();
 
     if (builder.Configuration.GetValue<bool>("SeedDatabase"))
     {
-        var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
+        DataSeeder seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
         await seeder.SeedAsync();
     }
 }

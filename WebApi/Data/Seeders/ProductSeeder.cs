@@ -15,7 +15,7 @@ public class ProductSeeder : ISeeder
     {
         if (_context.Products.Any()) return;
 
-        var products = new List<Product>
+        List<Product> products = new()
         {
             new Product
             {

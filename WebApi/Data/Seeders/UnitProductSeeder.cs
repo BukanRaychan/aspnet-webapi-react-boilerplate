@@ -15,12 +15,12 @@ public class UnitProductSeeder : ISeeder
     {
         if (_context.UnitProducts.Any()) return;
 
-        var firstProduct = _context.Products.OrderBy(p => p.Id).FirstOrDefault();
-        var firstUser = _context.Users.OrderBy(u => u.Id).FirstOrDefault();
+        Product? firstProduct = _context.Products.OrderBy(p => p.Id).FirstOrDefault();
+        ApplicationUser? firstUser = _context.Users.OrderBy(u => u.Id).FirstOrDefault();
 
         if (firstProduct == null || firstUser == null) return;
 
-        var unitProducts = new List<UnitProduct>
+        List<UnitProduct> unitProducts = new()
         {
             new UnitProduct
             {

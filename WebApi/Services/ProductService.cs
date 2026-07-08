@@ -19,9 +19,9 @@ public class ProductService : IProductService
 
     public async Task<PagedResponse<ProductResponseDto>> GetPagedAsync(PaginationQueryDto pagination)
     {
-        var (items, totalCount) = await _productRepository.GetPagedAsync(pagination);
-        var response = _mapper.Map<List<ProductResponseDto>>(items);
-        foreach (var productResponse in response)
+        (List<Product> items, int totalCount) = await _productRepository.GetPagedAsync(pagination);
+        List<ProductResponseDto> response = _mapper.Map<List<ProductResponseDto>>(items);
+        foreach (ProductResponseDto productResponse in response)
         {
             productResponse.Stock = items.First(p => p.Id == productResponse.Id).UnitProducts.Count;
         }
@@ -31,28 +31,32 @@ public class ProductService : IProductService
 
     public async Task<ProductResponseDto?> GetByIdAsync(int id)
     {
-        var product = await _productRepository.GetByIdAsync(id);
-        if (product == null) return null;
+        Product? product = await _productRepository.GetByIdAsync(id);
+        if (product == null) {
+            return null;
+        }
 
-        var productResponse = _mapper.Map<ProductResponseDto>(product);
+        ProductResponseDto productResponse = _mapper.Map<ProductResponseDto>(product);
         productResponse.Stock = await _productRepository.GetStockCountAsync(id);
         return productResponse;
     }
 
     public async Task<ProductResponseDto> CreateAsync(CreateProductDto dto)
     {
-        var product = _mapper.Map<Product>(dto);
+        Product product = _mapper.Map<Product>(dto);
         product.CreatedAt = DateTime.UtcNow;
-        var created = await _productRepository.CreateAsync(product);
+        Product created = await _productRepository.CreateAsync(product);
         return _mapper.Map<ProductResponseDto>(created);
     }
 
     public async Task<ProductResponseDto?> UpdateAsync(int id, UpdateProductDto dto)
     {
-        var existing = await _productRepository.GetByIdAsync(id);
-        if (existing == null) return null;
+        Product? existing = await _productRepository.GetByIdAsync(id);
+        if (existing == null) {
+            return null;
+        }
         _mapper.Map(dto, existing);
-        var updated = await _productRepository.UpdateAsync(existing);
+        Product? updated = await _productRepository.UpdateAsync(existing);
         return _mapper.Map<ProductResponseDto>(updated);
     }
 

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore.Storage;
 using WebApi.Data.Seeders;
 
 namespace WebApi.Data;
@@ -15,9 +16,9 @@ public class DataSeeder
 
     public async Task SeedAsync()
     {
-        foreach (var seeder in _seeders)
+        foreach (ISeeder seeder in _seeders)
         {
-            await using var transaction = await _context.Database.BeginTransactionAsync();
+            await using IDbContextTransaction transaction = await _context.Database.BeginTransactionAsync();
             try
             {
                 await seeder.SeedAsync();

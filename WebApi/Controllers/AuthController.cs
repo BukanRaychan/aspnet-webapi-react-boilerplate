@@ -22,26 +22,28 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {
-        var result = await _authService.RegisterAsync(dto);
+        AuthResponseDto? result = await _authService.RegisterAsync(dto);
 
-        if (result == null)
+        if (result == null) {
             return BadRequest(ApiResponseDto<object>.ErrorResult(
                 "Email already exists or registration failed",
                 "Registration failed"));
-
+        }
+        
         return Ok(ApiResponseDto<object>.SuccessResult(result, "Registration successful"));
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
-        var result = await _authService.LoginAsync(dto);
+        AuthResponseDto? result = await _authService.LoginAsync(dto);
 
-        if (result == null)
+        if (result == null) {
             return Unauthorized(ApiResponseDto<object>.ErrorResult(
                 "Invalid email or password",
                 "Login failed"));
-
+        }
+        
         return Ok(ApiResponseDto<object>.SuccessResult(result, "Login successful"));
     }
 
@@ -49,20 +51,21 @@ public class AuthController : ControllerBase
     [HttpPost("update-profile")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        if (string.IsNullOrEmpty(userId))
+        if (string.IsNullOrEmpty(userId)) { 
             return Unauthorized(ApiResponseDto<object>.ErrorResult(
                 "Invalid Token",
                 "Unauthorized"));
+        }
+        
+        bool result = await _authService.UpdateProfileAsync(userId, dto);
 
-        var result = await _authService.UpdateProfileAsync(userId, dto);
-
-        if (!result)
+        if (!result) {
             return BadRequest(ApiResponseDto<object>.ErrorResult(
                 "Update failed — check your current password",
                 "Update failed"));
-
+        }
         return Ok(ApiResponseDto<object>.SuccessResult(null, "Profile updated successfully"));
     }
 }

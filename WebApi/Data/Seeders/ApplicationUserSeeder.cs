@@ -16,7 +16,7 @@ public class ApplicationUserSeeder : ISeeder
     {
         if (_userManager.Users.Any()) return;
 
-        var users = new List<(ApplicationUser user, string password)>
+        List<(ApplicationUser user, string password)> users = new()
         {
             (new ApplicationUser
             {
@@ -37,7 +37,7 @@ public class ApplicationUserSeeder : ISeeder
             }, "password")
         };
 
-        foreach (var (user, password) in users)
+        foreach ((ApplicationUser user, string password) in users)
         {
             await _userManager.CreateAsync(user, password);
         }
